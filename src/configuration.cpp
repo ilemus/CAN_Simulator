@@ -38,13 +38,29 @@ void Configuration::read_vector_database(string filepath) {
             unsigned int length = stoi(tokens[3]);
             current_msg = new Message(id, tokens[2].substr(0, tokens[2].length() - 1), length, tokens[4]);
             messages[id] = current_msg;
-        } else if (tokens.size() > 0 && tokens[0].compare("SG_") == 0) {
+        } else if (tokens.size() > 1 && tokens[1].compare("SG_") == 0 && tokens[0].compare("") == 0) {
             // New signal
-            if (!(tokens.size() == 8)) continue;
+
+            if (tokens.size() != 10) continue;
             // SG_ CR_Solar_Right_Sens : 0|8@1+ (4.72441,0) [0|1200] "W/m2"  DATC
-            
+            int start_bit, length;
+            vector<string> bits = split(tokens[4], '|');
+            cout << "bits size: " << bits.size() << endl;
+            if (bits.size() != 2) continue;
+            start_bit = stoi(bits[0]);
+            length = stoi(bits[1].substr(0, bits[1].find("@")));
+            current_msg->add_signal(tokens[2], new Signal(start_bit, length));
+            current_msg->update_signal(tokens[2], 0xffffffffffffffff);
         }
     }
     
-    for (auto it = messages.begin(); it != messages.end(); ++it) cout << it->second->get_message_name() << "\t\t\t\t: " << it->second->to_string() << endl;
+    // Just printing out the messages
+    for (auto it = messages.begin(); it != messages.end(); ++it) {
+        Message* msg = it->second;
+        cout << msg->get_message_name() << ":\t" << msg->to_string() << endl;
+        
+        for (auto s = msg->signals.begin(); s != msg->signals.end(); ++s) {
+            cout << "\t" << s->first << ": " << s->second->start_bit << "|" << s->second->length << endl;
+        }
+    }
 }

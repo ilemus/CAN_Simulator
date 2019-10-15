@@ -21,10 +21,10 @@ Message::~Message() {
 }
 
 void Message::update_signal(string str, unsigned long long int value) {
-    Signal s = signals[str];
-    int start_byte = s.start_bit / 8;
-    int grab = s.start_bit % 8;
-    int remaining = s.length;
+    Signal* s = signals[str];
+    int start_byte = s->start_bit / 8;
+    int grab = s->start_bit % 8;
+    int remaining = s->length;
     int mask = 0x0FF;
     int byte_count = 0;
     while (remaining > 0) {
@@ -49,12 +49,12 @@ void Message::update_signal(string str, unsigned long long int value) {
 
 unsigned long long int Message::get_signal(string name) {
     unsigned long long int result = 0L;
-    Signal s = signals[name];
+    Signal* s = signals[name];
     int mask = 0x0FF;
-    int start_byte = s.start_bit / 8;
-    int grab = s.start_bit % 8;
+    int start_byte = s->start_bit / 8;
+    int grab = s->start_bit % 8;
     int byte_count = 0;
-    int remaining = s.length;
+    int remaining = s->length;
     while (remaining > 0) {
         if (remaining < 8) {
             mask = mask >> 8 - remaining;

@@ -17,7 +17,7 @@ namespace can {
             length = l;
         }
         Signal() : Signal(0, 0) {}
-        byte[] serialize();
+        char* serialize();
     };
 }
 
@@ -39,17 +39,18 @@ namespace can {
     */
     class Message {
     private:
-        unordered_map<string, Signal> signals;
         int can_id;
         string sender_name;
         string message_name;
         unsigned char* can_message;
         int message_length;
     public:
+        unordered_map<string, Signal*> signals;
+        
         Message(int id, string message_name ,unsigned int length, string sender_name);
         ~Message();
         // Add signal to message. messages should not be overlapping. Signal considers start bit and length.
-        void add_signal(string name, Signal signal) {
+        void add_signal(string name, Signal* signal) {
             signals[name] = signal;
         }
         // lower half (long msb 00 00 00 00 lsb). Set the signal (previously defined for the message) to the value provided.
@@ -64,7 +65,7 @@ namespace can {
         /*
         Serialization format will be short int type, int length, {content}
         */
-        byte[] serialize();
+        char* serialize();
     };
 }
 #endif
