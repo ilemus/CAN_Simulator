@@ -12,7 +12,9 @@ private:
     unordered_map<int, Message*> messages;
 public:
     static Configuration load_configuration(string filepath);
-    void save_configuration();
+    void save_configuration(string filepath);
     void read_vector_database(string filepath);
+    
+    void print_messages();
 };
 #endif

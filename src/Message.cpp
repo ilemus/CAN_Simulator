@@ -1,18 +1,19 @@
 #include "Message.hpp"
-#include <iostream>
-#include <sstream>
-#include <iomanip>
 
 Message::Message(int id, string msg ,unsigned int length, string sndr) {
     can_id = id;
     message_name = msg;
-    can_message = new unsigned char[length];
+    message_length = length;
+    init_message();
+    sender_name = sndr;
+}
+
+void Message::init_message() {
+    can_message = new unsigned char[message_length];
     // Originally values are garbage.
-    for (int i = 0; i < length; i++) {
+    for (int i = 0; i < message_length; i++) {
         can_message[i] = 0;
     }
-    message_length = length;
-    sender_name = sndr;
 }
 
 Message::~Message() {

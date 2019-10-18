@@ -5,7 +5,47 @@
 #include <string>
 #include <unordered_map>
 
+#include <iostream>
+#include <sstream>
+#include <iomanip>
+
 using namespace std;
+
+class String {
+public:
+    int length;
+    const char* c_str = NULL;
+    
+    String() : String("") {}
+    String(string str) {
+        length = str.length();
+        c_str = str.c_str();
+    }
+    
+    string to_string() {
+        return string(c_str);
+    }
+    
+    friend istream& operator>> (istream& is, String& str) {
+        char* c_str;
+        is >> str.length;
+        c_str = new char[str.length];
+        int temp;
+        for (int i = 0; i < str.length; i++) {
+            is >> temp;
+            c_str[i] = (char) temp;
+        }
+        str.c_str = c_str;
+        return is;
+    }
+    friend ostream& operator<< (ostream& os, const String& str) {
+        os << str.length;
+        for (int i = 0; i < str.length; i++) {
+            os << " " << (int) str.c_str[i];
+        }
+        return os;
+    }
+};
 
 namespace can {
     class Signal {
@@ -17,7 +57,14 @@ namespace can {
             length = l;
         }
         Signal() : Signal(0, 0) {}
-        char* serialize();
+        friend istream& operator>> (istream& is, Signal& sig) {
+            is >> sig.start_bit >> sig.length;
+            return is;
+        }
+        friend ostream& operator<< (ostream& os, const Signal& sig) {
+            os << sig.start_bit << " " << sig.length;
+            return os;
+        }
     };
 }
 
@@ -42,12 +89,13 @@ namespace can {
         int can_id;
         string sender_name;
         string message_name;
-        unsigned char* can_message;
         int message_length;
+        unsigned char* can_message;
+        void init_message();
     public:
         unordered_map<string, Signal*> signals;
-        
-        Message(int id, string message_name ,unsigned int length, string sender_name);
+        Message() : Message(0, "", 0, "") {}
+        Message(int id, string message_name, unsigned int length, string sender_name);
         ~Message();
         // Add signal to message. messages should not be overlapping. Signal considers start bit and length.
         void add_signal(string name, Signal* signal) {
@@ -62,10 +110,36 @@ namespace can {
         string get_message_name() { return message_name; }
         // Format the string to printable value (ID\tlength\tmessage array)
         string to_string();
-        /*
-        Serialization format will be short int type, int length, {content}
-        */
-        char* serialize();
+        
+        int get_can_id() { return can_id; }
+        
+        friend istream& operator>> (istream& is, Message& msg) {
+            String sender_name, message_name;
+            is >> msg.can_id >> sender_name >> message_name >> msg.message_length;
+            msg.sender_name = sender_name.to_string();
+            msg.message_name = message_name.to_string();
+            
+            int count;
+            is >> count;
+            for (int i = 0; i < count; i++) {
+                String name;
+                int start_bit;
+                int length;
+                is >> name >> start_bit >> length;
+                msg.signals[name.to_string()] = new Signal(start_bit, length);
+            }
+            
+            return is;
+        }
+        friend ostream& operator<< (ostream& os, const Message& msg) {
+            os << msg.can_id << " " << String(msg.sender_name) << " " << String(msg.message_name) << " " << msg.message_length;
+            os << " " << msg.signals.size();
+            for (auto s = msg.signals.begin(); s != msg.signals.end(); ++s) {
+                // Strings might need to be converted to bytes
+                cout << " " << String(s->first) << " " << s->second->start_bit << " " << s->second->length;
+            }
+            return os;
+        }
     };
 }
 #endif

@@ -40,12 +40,10 @@ void Configuration::read_vector_database(string filepath) {
             messages[id] = current_msg;
         } else if (tokens.size() > 1 && tokens[1].compare("SG_") == 0 && tokens[0].compare("") == 0) {
             // New signal
-
             if (tokens.size() != 10) continue;
             // SG_ CR_Solar_Right_Sens : 0|8@1+ (4.72441,0) [0|1200] "W/m2"  DATC
             int start_bit, length;
             vector<string> bits = split(tokens[4], '|');
-            cout << "bits size: " << bits.size() << endl;
             if (bits.size() != 2) continue;
             start_bit = stoi(bits[0]);
             length = stoi(bits[1].substr(0, bits[1].find("@")));
@@ -53,7 +51,35 @@ void Configuration::read_vector_database(string filepath) {
             current_msg->update_signal(tokens[2], 0xffffffffffffffff);
         }
     }
+}
+
+Configuration Configuration::load_configuration(string path) {
+    Configuration cfg;
+    fstream infile(path);
     
+    Message* msg = NULL;
+    int size;
+    infile >> size;
+    for (int i = 0; i < size; i++) {
+        msg = new Message();
+        infile >> *msg;
+        cfg.messages[msg->get_can_id()] = msg;
+    }
+    infile.close();
+    return cfg;
+}
+
+void Configuration::save_configuration(string filepath) {
+    fstream outfile(filepath);
+    outfile << messages.size();
+    for (auto it = messages.begin(); it != messages.end(); ++it) {
+        Message* msg = it->second;
+        outfile << " " << *msg;
+    }
+    outfile.close();
+}
+
+void Configuration::print_messages() {
     // Just printing out the messages
     for (auto it = messages.begin(); it != messages.end(); ++it) {
         Message* msg = it->second;
