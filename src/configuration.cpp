@@ -53,9 +53,8 @@ void Configuration::read_vector_database(string filepath) {
     }
 }
 
-Configuration Configuration::load_configuration(string path) {
-    Configuration cfg;
-    fstream infile(path);
+void Configuration::load_configuration(string path) {
+    ifstream infile(path);
     
     Message* msg = NULL;
     int size;
@@ -63,19 +62,20 @@ Configuration Configuration::load_configuration(string path) {
     for (int i = 0; i < size; i++) {
         msg = new Message();
         infile >> *msg;
-        cfg.messages[msg->get_can_id()] = msg;
+        messages[msg->get_can_id()] = msg;
     }
     infile.close();
-    return cfg;
 }
 
 void Configuration::save_configuration(string filepath) {
-    fstream outfile(filepath);
+    ofstream outfile(filepath);
+
     outfile << messages.size();
     for (auto it = messages.begin(); it != messages.end(); ++it) {
         Message* msg = it->second;
         outfile << " " << *msg;
     }
+    outfile << endl;
     outfile.close();
 }
 

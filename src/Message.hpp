@@ -2,6 +2,7 @@
 #define MESSAGE_HPP
 
 #include <vector>
+#include <cstring>
 #include <string>
 #include <unordered_map>
 
@@ -13,13 +14,14 @@ using namespace std;
 
 class String {
 public:
-    int length;
-    const char* c_str = NULL;
+    unsigned int length = 0;
+    char* c_str = NULL;
     
     String() : String("") {}
     String(string str) {
         length = str.length();
-        c_str = str.c_str();
+        c_str = new char [str.length()+1];
+        strcpy(c_str, str.c_str());
     }
     
     string to_string() {
@@ -28,20 +30,22 @@ public:
     
     friend istream& operator>> (istream& is, String& str) {
         char* c_str;
-        is >> str.length;
-        c_str = new char[str.length];
-        int temp;
+        unsigned int temp;
+        is >> temp;
+        str.length = temp;
+        c_str = new char[str.length + 1];
         for (int i = 0; i < str.length; i++) {
             is >> temp;
             c_str[i] = (char) temp;
         }
+        c_str[str.length] = '\0';
         str.c_str = c_str;
         return is;
     }
     friend ostream& operator<< (ostream& os, const String& str) {
         os << str.length;
         for (int i = 0; i < str.length; i++) {
-            os << " " << (int) str.c_str[i];
+            os << " " << (unsigned int) str.c_str[i];
         }
         return os;
     }
@@ -87,8 +91,8 @@ namespace can {
     class Message {
     private:
         int can_id;
-        string sender_name;
-        string message_name;
+        string sender_name = "";
+        string message_name = "";
         int message_length;
         unsigned char* can_message;
         void init_message();
@@ -112,15 +116,17 @@ namespace can {
         string to_string();
         
         int get_can_id() { return can_id; }
+        string get_sender_name() { return sender_name; }
         
         friend istream& operator>> (istream& is, Message& msg) {
-            String sender_name, message_name;
-            is >> msg.can_id >> sender_name >> message_name >> msg.message_length;
-            msg.sender_name = sender_name.to_string();
-            msg.message_name = message_name.to_string();
+            String sn, mn;
+            is >> msg.can_id >> sn >> mn >> msg.message_length;
+            msg.sender_name = sn.to_string();
+            msg.message_name = mn.to_string();
             
-            int count;
+            unsigned int count;
             is >> count;
+            // cout << endl << "count in: " << count << endl;
             for (int i = 0; i < count; i++) {
                 String name;
                 int start_bit;
@@ -128,15 +134,16 @@ namespace can {
                 is >> name >> start_bit >> length;
                 msg.signals[name.to_string()] = new Signal(start_bit, length);
             }
-            
+            msg.init_message();
             return is;
         }
         friend ostream& operator<< (ostream& os, const Message& msg) {
             os << msg.can_id << " " << String(msg.sender_name) << " " << String(msg.message_name) << " " << msg.message_length;
             os << " " << msg.signals.size();
+            // cout << endl << "count out: " << msg.signals.size() << endl;
             for (auto s = msg.signals.begin(); s != msg.signals.end(); ++s) {
                 // Strings might need to be converted to bytes
-                cout << " " << String(s->first) << " " << s->second->start_bit << " " << s->second->length;
+                os << " " << String(s->first) << " " << s->second->start_bit << " " << s->second->length;
             }
             return os;
         }

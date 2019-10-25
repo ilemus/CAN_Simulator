@@ -5,6 +5,7 @@ Message::Message(int id, string msg ,unsigned int length, string sndr) {
     message_name = msg;
     message_length = length;
     init_message();
+    if (!sndr.empty() && sndr[sndr.size() - 1] == '\r') sndr.erase(sndr.size() - 1);
     sender_name = sndr;
 }
 
